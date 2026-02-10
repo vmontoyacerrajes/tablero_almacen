@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<!--[if IE 9]> <html class="no-js lt-ie10" lang="en"> <![endif]-->
+<!--[if gt IE 9]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+	<head>
+		<meta charset="utf-8">
+		
+		<title>Error</title>
+		<base href="https://mov.cerraco.mx/">
+		<meta name="description" content="El herraje ideal para su mueble">
+		<meta name="title" content="Cerrajes">
+		<meta name="google" content="notranslate" />
+		<meta name="autor" content="Bruno Mendiola Lorenzano" />
+		<meta name="robots" content="noindex, nofollow">
+		<meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no" />
+		<meta name="apple-itunes-app" content="app-id=6450958949, app-argument=https://cerrajes.com">
+		<link rel="shortcut icon" href="img/favicon.png?v=2">
+		<link href="https://mov.cerraco.mx/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<link href="https://mov.cerraco.mx/css/plugins.css" rel="stylesheet" type="text/css" />
+<link href="https://mov.cerraco.mx/css/main.css" rel="stylesheet" type="text/css" />
+<link href="https://mov.cerraco.mx/css/themes.css" rel="stylesheet" type="text/css" />
+<link href="https://mov.cerraco.mx/css/toastr.css" rel="stylesheet" type="text/css" />
+<link href="https://mov.cerraco.mx/css/sweetalert.css" rel="stylesheet" type="text/css" />
+<link href="https://mov.cerraco.mx/css/responsive.dataTables.min.css" rel="stylesheet" type="text/css" />
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/vendor/modernizr.min.js'></script>
+		<script>
+			var baseurl="https://mov.cerraco.mx/";
+			var token="c62803f1ce5bf4d030c46ac3d9defaeb";
+			var soap=false;
+		</script>
+		<style type="text/css">
+
+	::selection { background-color: #E13300; color: white; }
+	::-moz-selection { background-color: #E13300; color: white; }
+
+	#container {
+		margin: 10px;
+		border: 1px solid #D0D0D0;
+		box-shadow: 0 0 8px #D0D0D0;
+	}
+	</style>
+	</head>
+	<body>
+				<style>
+	body{
+		background: #F2F2F2;
+		color: black;
+	}
+	.top-content{
+		margin-top: 10%;
+	}
+	.foot2{
+		width: 100%;
+	}
+</style>
+<div id="page-content">
+				<div style=" margin: 0px auto;">
+					<div class="form-box">
+					<div class="form-bottom" style="text-align: center; color: white;">
+						<div class="emoji precaucion" style="width: 150px ;height: 150px;"></div>
+						<h1 style="margin: 0px; color: #F6BB4C; font-weight: bold;">¡404!</h1>
+						<img style="width: 280px; " src="https://mov.cerraco.mx/img//empresas/cerrajes/logo_ini_nuevo.png">
+						<h4 style="color: black">Aquí no hay nada ó no esta disponible por el momento.</h4>
+					</div>
+					</div>
+				</div>
+</div>								<footer class="clearfix" style="">
+						<div class="pull-left" style="font-weight: bold">MOVING 2026</div>
+						<div class="pull-right"><a href="#" target="_new" style="color: black;">1.4.5</a></div>
+					</footer>
+							</div>
+			</div>
+		</div>
+		<style>
+			#cerrado{
+				position: absolute;
+				z-index: 9999;
+				top: 0px;
+				width: 100%;
+				height: 100%;
+				background: rgba(0,0,0,0.5);
+			}
+		</style>
+		<div id="cerrado" style="display: none;">
+			<div id="login-container" class="animation-slideDown">
+            <!-- Login Title -->
+            <div class="login-title text-right">
+	            <br>
+                <h1>
+                    Sesión <strong>Finalizada</strong> <br>
+                    <p style="font-size: 15px;">Existe otra sesión abierta.</p>
+                    <a href="https://mov.cerraco.mx/acceso" style="background: white; padding: 5px 10px; font-size: 16px; border-radius: 15px; "> <span class="fa fa-arrow-circle-right"></span>  Iniciar Sesión</a>
+                </h1>
+            </div>
+        </div>
+		</div>
+		<style>
+			.Dios{ cursor: pointer !important; }
+			#Dmodal .carousel-indicators li{ border: 1px solid #cecece !important;}
+			#Dmodal .carousel-indicators .active{ background-color: #cecece !important;}
+			#Dmodal .carousel-inner .item{ height: auto !important;}
+		</style>
+		<div class="modal fade" id="Dmodal" tabindex="-1">
+		  <div class="modal-dialog" style="width:900px;max-width:96vw;">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <button class="close" data-dismiss="modal">&times;</button>
+		        <h4 class="modal-title">
+		          <span id="Dcode" class="label label-primary" style="font-size:12px;"></span>
+		          <span id="Dtitulo" style="margin-left:8px;"></span>
+		        </h4>
+		      </div>
+		
+		      <div class="modal-body">
+			      <div class="Dtipo" id="Ditemcode" style="display: none;">
+			        <div class="row">
+			          <div class="col-sm-5">
+			            <div id="prodCarousel" class="carousel slide" data-ride="carousel" data-interval="0" >
+			              <ol class="carousel-indicators" id="prodCarouselIndicators"></ol>
+			              <div class="carousel-inner" id="prodCarouselInner">
+			                <!-- slides -->
+			              </div>
+			              <a class="left carousel-control" href="#prodCarousel" role="button" data-slide="prev">
+			                <span class="fa fa-chevron-left"></span>
+			              </a>
+			              <a class="right carousel-control" href="#prodCarousel" role="button" data-slide="next">
+			                <span class="fa fa-chevron-right"></span>
+			              </a>
+			            </div>
+			          </div>
+			          <div class="col-sm-7">
+			            <table class="table-condensed no">
+			              <tbody>
+			                <tr>
+			                  <th style="width:160px;">Unidad</th>
+			                  <td id="prodUom">-</td>
+			                </tr>
+			                <tr>
+			                  <th>Precio</th>
+			                  <td id="prodPrice">-</td>
+			                </tr>
+			                <tr>
+			                  <th>Marca</th>
+			                  <td id="prodMarca">-</td>
+			                </tr>
+			                <tr>
+			                  <th>Color</th>
+			                  <td id="prodColor">-</td>
+			                </tr>
+			                <tr>
+			                  <th>Medida</th>
+			                  <td id="prodMedida">-</td>
+			                </tr>
+			                <tr>
+			                  <th>Categorías</th>
+			                  <td id="prodCategorias">-</td>
+			                </tr>
+			                <tr>
+			                  <th>Visible web</th>
+			                  <td id="prodVisibleWeb">-</td>
+			                </tr>
+			              </tbody>
+			            </table>
+			            <div>
+			              <label>Anexos</label>
+			              <table class="table table-striped table-condensed no" id="tblProdAnexos">
+				              <thead>
+				                <tr>
+				                  <th style="width:60px;">Tipo</th>
+				                  <th>Archivo</th>
+				                  <th style="width:180px;">Fecha</th>
+				                  <th style="width:90px;">Acciones</th>
+				                </tr>
+				              </thead>
+				              <tbody><!-- rows --></tbody>
+				            </table>
+			            </div>
+			            
+			          </div>
+			        </div>
+			      </div>
+		      </div>
+		      <div class="modal-footer">
+		        <button class="btn btn-default" data-dismiss="modal">Cerrar</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+		<a href="#" id="to-top"><i class="fa fa-angle-double-up"></i></a>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/vendor/jquery.min.js'></script>
+		<script>
+			Number.prototype.toFixedDown = function(digits){
+				var n = this - Math.pow(10, -digits)/2;
+				n += n / Math.pow(2, 53); // added 1360765523: 17.56.toFixedDown(2) === "17.56"
+				return n.toFixed(digits);
+			}
+			function revisar(v, fallback='-'){
+				return (v===null || v===undefined || v==='') ? fallback : v;
+			}
+		</script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/vendor/bootstrap.min.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/plugins.js?v=2'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/app.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/toastr.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/sweetalert.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/mask.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/numeric.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/number.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/hotkeys.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/cookie.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/helpers/ckeditor/ckeditor.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/dataTables.responsive.min.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/combodate.js'></script>
+		<script type='text/javascript' src='https://mov.cerraco.mx/js/dios.js'></script>
+		<script type='text/javascript'>
+			$(function(){
+				moment.locale('es');
+				App.datatables();
+			});
+			</script>
+				<script type='text/javascript'>
+			$(function(){
+				function tiempo(){
+					var now = new Date(); 
+					var hour = now.getHours();
+					var minute = now.getMinutes();
+					hour = ( hour < 10 )? "0"+hour : hour;
+					minute = ( minute < 10 )? "0"+minute : minute;
+					$('#reloj').html(hour +':'+ minute);
+				}
+				tiempo();
+				setInterval(function(){ tiempo(); },60000);
+				//App.datatables();
+				// NProgress.set(0.0);
+				$('table.table:not(.no)').each(function(){
+					var tabla=$(this);
+					var ajax=tabla.data('ajax');
+					var columns=[];
+					tabla.find('>thead>tr>th').each(function(){
+						columns.push({'data': $(this).data('campos'),'tipo': $(this).data('tipo'),'name': $(this).data('valor'), 'searchable': ( $(this).data('buscar')==undefined?true:$(this).data('buscar') ) });
+					});
+					$(tabla).dataTable({
+					"lengthMenu": [[10, 25, 50,100,500,1000, -1], [10, 25, 50,100,500,1000, "Todo"]],
+					columnDefs: [ { orderable: false, targets: [ $(this).data('noorden')==undefined?null:$(this).data('noorden') ] } ],
+					"order":  [[ $(this).data('orden')==undefined?0:$(this).data('orden') , $(this).data('tipoorden')==undefined?"desc":$(this).data('tipoorden') ]],
+					pageLength: ($(this).data('paginas')==undefined?10:$(this).data('paginas')),
+					"autoWidth": false,
+					responsive: ($(this).data('responsive')==undefined?true:$(this).data('responsive')),
+					"processing": (ajax!=undefined?true:false),
+					"serverSide": (ajax!=undefined?true:false),
+					"sServerMethod":($(this).data('ajaxmetodo')==undefined?'GET':$(this).data('ajaxmetodo')),
+					"ajax": (ajax!=undefined? {
+            "url": (ajax!=undefined?ajax:null),
+            "data": function ( d ) {
+	            d.erp_token= token;
+                d.myKey = "myValue";
+            }
+					}:null),
+					"columns": (columns!=undefined?columns:null),
+					initComplete: function(settings, json) {
+						$('.tool').tooltip();
+						$($('table.table:not(.no) input[name="fila"]')[0]).prop('checked',true);
+					},
+					"language": {
+						"emptyTable": "..."
+					},
+					footerCallback: function(row, data, start, end, display) {
+						if( $(this).data('sumf')!=undefined ){
+							var api = this.api();
+							var intVal = function ( i ) {
+								return typeof i === 'string' ? i.replace(/[\$,]/g, '')*1 : typeof i === 'number' ? i : 0;
+							};
+							// Total over all pages
+							total = api
+									.column( $(this).data('sumf') )
+									.data()
+									.reduce( function (a, b) {
+											return intVal(a) + intVal(b);
+									}, 0 );
+
+							// Total over this page
+							visibles = api
+									.column( $(this).data('sumf'), { page: 'current'} )
+									.data()
+									.reduce( function (a, b) {
+											return intVal(a) + intVal(b);
+									}, 0 );
+							
+							// Update footer
+							/*
+							$( api.column( $(this).data('sumf') ).footer() ).html( 
+								'<i style="font-size:11px;">Pagina:</i> '+ $.number(visibles,2)+'<br>'+
+								'<i style="font-size:11px;">Total: </i>'+ $.number(total,2)
+							);*/
+							$('#sum_pag').html($.number(visibles,2));
+							$('#sum_tot').html($.number(total,2));
+						}
+					}
+					});
+				});
+				$('table.table:not(.no)').on( 'processing.dt', function ( e, settings, processing ) {
+					NProgress.set(1);
+				}).dataTable();
+				$(document).on('keyup','input[type="search"]',function(){
+					$('.tool').tooltip();
+				})
+				$(document).on('change','input[type="search"]',function(){
+					$('.tool').tooltip();
+				})
+				$('.tool').tooltip();
+				$('.pop').popover();
+				$('.fechap').datepicker({
+					format: 'yyyy-mm-dd', 
+					weekStart: 1 ,
+					autoclose:true});
+				$('.fecha').combodate({
+					format: "YYYY-MM-DD",
+					template:"D MM YYYY",
+					minYear:1900,
+					maxYear: 2026,
+					customClass:'form-control',
+					smartDays: true
+				});
+				$('.hora').combodate({
+					format: "HH:mm",
+					template:"HH:mm",
+					customClass:'form-control',
+					smartDays: true
+				});	
+				$(document).on('keyup','.solo_numeros',function(){
+					$('.solo_numeros').numeric('.');
+				});
+				$('.busqueda').keyup(function(i){
+					if(i.keyCode ==13){
+						var url=window.location.href.split('?');
+						window.location=url[0]+"?busqueda="+ $(this).val();
+					}
+				});
+				$('.solo_mayusculas').keyup(function(i){
+					if(i.keyCode!=9 && i.keyCode!=16 &&  i.keyCode!=18 && i.keyCode!=37 && i.keyCode!=38 && i.keyCode!=39 && i.keyCode!=91 && i.keyCode!=undefined){
+						$(this).val( $(this).val().toUpperCase() );
+					}
+				});
+				$(document).on('click','.confirmar',function(e){
+					e.preventDefault();
+					var emoji_tipo=$(this).data('tipo');
+					var pregunta=$(this).data('pregunta');
+					var descripcion=$(this).data('descripcion');
+					var url=$(this).attr('href');
+					var form=$(this).closest('form');
+					swal({
+					title: "<div class='emoji "+emoji_tipo+"'></div>"+pregunta,
+					text: descripcion,
+					showCancelButton: true,
+					confirmButtonColor: "#DD6B55",
+					confirmButtonText: "Si",
+					cancelButtonText: "No",
+					closeOnConfirm: false,
+					closeOnCancel: true,
+					html:true
+					}, function(isConfirm){
+						if( isConfirm ){
+							if(url!=undefined){
+								window.location=url;
+							}else{
+								$(form).submit();
+							}
+						}
+					});
+				});
+				var ele_actual=null
+				$('.key').each(function(){
+					var ele=$(this);
+					var key=$(this).data('key');
+					var es_select=false;
+					if( ele.hasClass('select-chosen') ){
+						es_select=true;
+					}
+					
+					$(document).bind('keydown', key , function assets(e) {
+						if(es_select){
+							$(ele).trigger('chosen:open');
+						}else{
+							$(ele).focus().click();
+						}
+						ele_actual=ele;
+					});
+				});
+				$(document).keypress(function(e){
+/*
+					if(e.charCode==27){
+						$(ele_actual).blur();
+						$('.chosen-search input').blur();
+						$(ele_actual).datepicker("hide");
+						$('body').click();
+					}
+*/
+				});
+				$(window).resize(function(){
+					$('table.table:not(.no)').dataTable();
+				});
+				$("form.no").submit(function(){ return false; });
+				
+				var options_tipo="<option value='17'>Producto – Proveedor</option><option value='21'>Opn – Cambiado</option><option value='23'>Opn – Dañado</option><option value='19'>Opn – Faltante</option><option value='22'>Opn – Mal acomodo</option><option value='24'>Opn – Mal declarado</option><option value='20'>Opn – No etiquetado/ identificado</option><option value='18'>Opn – Sobrante</option><option value='12'>Producto – Cambiado</option><option value='13'>Producto – Defectuoso</option><option value='16'>Producto – Error de Envio</option><option value='11'>Producto – Faltante</option><option value='14'>Producto – Incompleto</option><option value='15'>Producto – Mal Identificado</option><option value='10'>Producto – Sobrante</option><option value='9'>Producto – Dañado</option><option value='25'>Producto – Dañado CMX</option><option value='26'>Producto – Faltante CMX</option><option value='27'>TI – Problemas con Moving</option><option value='28'>TI – Solicitud de Desarrollo en Moving</option><option value='6'>TI – Daño de Equipo / Celular</option><option value='1'>TI – Problemas con equipos</option><option value='3'>TI – Problemas con licencias</option><option value='2'>TI – Problemas con Sistemas o Aplicaciones</option>";
+					
+				
+
+				$(".ticket_popover").popover({
+					html: true, 
+					content: function() {
+						return ""+$('<div>').attr('id','popover-content').addClass('hide').append(
+							$('<form>').addClass('form-registro-clientes').attr({'method':'post','enctype':'multipart/form-data'}).append(
+								$('<div>').addClass('row')
+									.append(
+										$('<div>').addClass('col-xs-12')
+											.append( $('<input>').attr({type:'hidden',name:'erp_token'}).val(token) )
+											.append( 
+												$('<select>').attr({name:'id_tickets_tipo'}).addClass('form-control').html(options_tipo)
+											)
+									)
+									.append(
+										$('<div>').addClass('col-xs-12').attr({style:'margin:5px 0px 5px 0px;'})
+											.append( $('<input>').attr({type:'text',name:'asunto',placeholder:'Asunto'}).addClass('form-control') )
+									)
+									.append(
+										$('<div>').addClass('col-xs-12')
+											.append( $('<textarea>').attr({name:'descripcion',placeholder:'Descripción',rows:"10",cols:"40"}).addClass('form-control') )
+									)
+									.append(
+										$('<div>').addClass('col-xs-12 factura_cont').attr({style:'margin:10px 0px 15px 0px;'})
+											.append( 
+												$('<select>').attr({name:'factura',id:'factura_ticket','data-placeholder':'Buscar la Factura #'}).addClass('form-control')
+													.append( $('<option>').attr({diabled:true, selected:true,value:0}).html('Buscar Factura') )
+											)
+									)
+									.append(
+										$('<div>').addClass('col-xs-12')
+											.append( $('<label>').html("Subir Archivo") )
+										  .append( $('<input>').attr({type:'file',style:'margin-bottom:5px;',name:'files'}).addClass('form-control') )
+									)
+									.append(
+										$('<div>').addClass('col-xs-12').attr('style','padding-top: 5px;')
+											.append( $('<button>').attr({type:'button',style:'width: 100%;'}).addClass('btn btn-success btnx btn-registrar-ticket').html(' Registrar ') )
+									)
+							)
+						).html();
+						
+					}
+				});
+				var facturitas=[];
+				$('.ticket_popover').on('shown.bs.popover', function () {
+					$('#factura_ticket').select2({
+						dropdownParent: $('.popover-content'),
+						ajax: {
+							url: baseurl+"/tickets/obtener_facturas/",
+							data: function (params) {
+								var queryParameters = {
+									buscar: params.term
+								}
+								return queryParameters;
+							},
+							dataType: 'json',
+							delay:1000,
+							processResults: function (data) {
+								$(data.rest).each( function(k,v){
+									facturitas[v.DocNum]=v;
+								});
+								return {
+									results: data.items
+								};
+							},
+							cache:true
+						},
+						placeholder: 'Buscando Factura...',
+						minimumInputLength: 3
+					});
+				});
+				
+				$(document).on('click', '.btn-registrar-ticket', function() {
+					NProgress.set(0.5);
+					var form = $(this).closest('form')[0];
+					var formData = new FormData(form);
+
+					$.ajax({
+						method: "POST",
+						url: baseurl + "tickets/enviar_ticket",
+						data: formData,
+						contentType: false,
+						processData: false,
+					})
+					.done(function(data) {
+						if (data.status == 'ok') {
+							//console.log("Respuesta del servidor:", data);
+							toastr.success(data.msj);
+							$(".ticket_popover").popover('hide')
+						} else {
+							toastr.error(data.msj);
+						}
+						NProgress.set(1);
+					});
+					
+				});
+				
+									var iter_loguiacion=setInterval(checar_loguiacion,300000);
+					function checar_loguiacion(){
+						$.get( "./acceso/vivo", function( data ) { if( typeof data.vivo !== 'undefined' && data.vivo == false ){ $('#cerrado').show(); clearInterval(iter_loguiacion); } });
+					}
+							});
+		</script>
+	</body>
+</html>
