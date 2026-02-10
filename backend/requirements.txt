@@ -1,0 +1,6 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+SQLAlchemy==2.0.34
+PyMySQL==1.1.1
+python-dateutil==2.9.0.post0
+requests

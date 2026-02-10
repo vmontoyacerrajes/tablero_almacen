@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tablero de Operaciones</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body.bg-soft-blue{
+      background:
+        radial-gradient(800px 400px at 10% -10%, rgba(59,130,246,0.10), transparent 60%),
+        radial-gradient(900px 500px at 110% 20%, rgba(14,165,233,0.10), transparent 65%),
+        linear-gradient(180deg, #f6f9ff 0%, #e9f2ff 60%, #e1eeff 100%);
+    }
+    .card {
+      background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:16px;
+      box-shadow:0 4px 18px rgba(15, 23, 42, 0.06);
+      position:relative; overflow:hidden;
+    }
+    .card::after{
+      content:""; position:absolute; left:0; top:0; height:4px; width:100%;
+      background: linear-gradient(90deg, var(--accent-start,#2563eb), var(--accent-end,#60a5fa));
+    }
+    .accent-blue  { --accent-start:#2563eb; --accent-end:#60a5fa; }
+    .accent-amber { --accent-start:#d97706; --accent-end:#f59e0b; }
+    .accent-green { --accent-start:#15803d; --accent-end:#22c55e; }
+    .accent-cyan  { --accent-start:#0284c7; --accent-end:#38bdf8; }
+
+    .k { font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:#6b7280; }
+    .v { font-weight:800; font-size:18px; }
+    .v-lg { font-weight:800; font-size:22px; }
+    .metric { font-size:24px; font-weight:800; }
+    .divider { height:1px; background:#eef2f7; margin:12px 0; }
+
+    .table th { background:#f8fafc; position:sticky; top:0; z-index:1; }
+    .table th, .table td { padding:10px 12px; }
+
+    .pill { padding:2px 10px; border-radius:999px; font-size:12px; font-weight:700; display:inline-block; border:1px solid transparent; }
+    .pill-green { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
+    .pill-amber { background:#fffbeb; color:#92400e; border-color:#fde68a; }
+    .pill-red { background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+
+    .equal-grid { display:grid; gap:16px; grid-auto-rows:1fr; }
+  </style>
+</head>
+<body class="bg-soft-blue text-slate-900">
+  <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-5">
+    <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Tablero de Operaciones</h1>
+        <p class="text-sm text-gray-600">Almacén central · Surtido · Verificación · Embarques</p>
+      </div>
+      <div class="flex items-end gap-2">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Mes</label>
+          <input id="month" type="month" class="mt-1 block w-44 rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white"/>
+        </div>
+        <button id="btnLoad" class="h-10 px-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 transition">Cargar</button>
+        <button id="btnExport" class="h-10 px-4 rounded-lg bg-white border border-gray-300 hover:bg-gray-50">Exportar CSV</button>
+      </div>
+    </header>
+
+    <!-- Encabezados -->
+    <section class="equal-grid" style="grid-template-columns: repeat(3,minmax(0,1fr));">
+      <div class="card accent-blue">
+        <div class="k">Mes</div>
+        <div class="text-xl font-semibold" id="hdrMes">—</div>
+        <div class="divider"></div>
+        <div class="grid grid-cols-3 gap-3">
+          <div><div class="k">Días hábiles</div><div class="v" id="hdrHabiles">—</div></div>
+          <div><div class="k">Transcurridos</div><div class="v" id="hdrTrans">—</div></div>
+          <div><div class="k">Pendientes</div><div class="v" id="hdrPend">—</div></div>
+        </div>
+      </div>
+
+      <div class="card accent-amber">
+        <div class="flex items-center justify-between">
+          <div class="font-semibold">Resultado del día</div>
+          <div class="text-xs text-gray-500" id="rdDia">—</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <div class="k">Pedidos</div>
+            <div class="v-lg" id="rdPed">—</div>
+          </div>
+          <div>
+            <div class="k">Partidas</div>
+            <div class="v-lg" id="rdPart">—</div>
+          </div>
+          <div>
+            <div class="k">Cap. instalada</div>
+            <div class="v" id="rdCapInst">—</div>
+          </div>
+
+          <div>
+            <div class="k">Cap. utilizada</div>
+            <div class="v" id="rdCapUtil">—</div>
+          </div>
+
+          <div>
+            <div class="k">Surtidos</div>
+            <div class="flex items-baseline gap-2">
+              <div class="v-lg" id="rdSur">—</div>
+              <div class="text-xs text-gray-500" id="rdSurPct">—</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="k">Verificados</div>
+            <div class="v-lg" id="rdVer">—</div>
+          </div>
+
+          <div>
+            <div class="k">Embarcados</div>
+            <div class="flex items-baseline gap-2">
+              <div class="v-lg" id="rdEmb">—</div>
+              <div class="text-xs text-gray-500" id="rdEmbPct">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card accent-cyan">
+        <div class="flex items-center justify-between">
+          <div class="font-semibold">Acumulado diario</div>
+          <div class="text-xs text-gray-500" id="pmInfo">—</div>
+        </div>
+        <div class="divider"></div>
+        <div class="grid grid-cols-3 gap-3">
+          <div><div class="k">Pedidos</div><div class="v" id="pmPed">—</div></div>
+          <div><div class="k">Partidas</div><div class="v" id="pmPart">—</div></div>
+          <div><div class="k">Cap. instalada</div><div class="v" id="pmCapInst">—</div></div>
+          <div><div class="k">Cap. utilizada</div><div class="v" id="pmCapUtil">—</div></div>
+          <div><div class="k">Surtidos</div><div class="v" id="pmSur">—</div></div>
+          <div><div class="k">Verificados</div><div class="v" id="pmVer">—</div></div>
+          <div><div class="k">Embarcados</div><div class="v" id="pmEmb">—</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bono y resumen MTD -->
+    <section class="equal-grid" style="grid-template-columns: repeat(2,minmax(0,1fr));">
+      <div class="card accent-green">
+        <div class="flex items-center justify-between">
+          <div class="font-semibold">Bono en equipo</div>
+          <div class="text-xs text-gray-500">Ped. embarcados por día</div>
+        </div>
+        <div class="divider"></div>
+        <div class="overflow-auto">
+          <table class="table min-w-full text-sm">
+            <thead>
+              <tr class="text-gray-600">
+                <th class="text-left">Días transcurridos</th>
+                <th class="text-left">≥ 90% <span class="pill pill-green ml-1">Verde</span></th>
+                <th class="text-left">80% – 89.99% <span class="pill pill-amber ml-1">Ámbar</span></th>
+                <th class="text-left">&lt; 80% <span class="pill pill-red ml-1">Rojo</span></th>
+                <th class="text-right">Embarque MTD</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id="bonoDiasTrans">—</td>
+                <td id="bono90">—</td>
+                <td id="bono80">—</td>
+                <td id="bono79">—</td>
+                <td class="text-right font-semibold" id="bonoMTDPct">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card accent-blue">
+        <div class="flex items-center justify-between">
+          <div class="font-semibold">Bono logrado al mes</div>
+          <div class="text-xs text-gray-500" id="bonoMesLabel">—</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xs font-bold uppercase tracking-wide text-gray-700">Embarque MTD</span>
+          <span id="bonoMesPctBox" class="px-3 py-1 rounded-md ring-1 ring-blue-200 bg-blue-50 text-blue-700 font-bold">—</span>
+        </div>
+
+        <div class="text-3xl font-extrabold inline-flex items-center px-3 py-1 rounded-lg ring-1" id="bonoMesValor">—</div>
+
+        <div class="text-xs text-gray-500 mt-3">
+          Regla: % embarque MTD → puntos (≥100%: 6 · ≥89.99%: 5 · ≥80%: 3 · &lt;80%: 0)
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI MTD -->
+    <section class="equal-grid" style="grid-template-columns: repeat(3,minmax(0,1fr));">
+      <div class="card accent-amber">
+        <div class="flex items-center justify-between">
+          <div class="k">Surtido (MTD)</div>
+          <span class="pill" id="badgeSurtido">—</span>
+        </div>
+        <div class="metric" id="kpiSurtidos">—</div>
+        <div class="text-xs text-gray-500">% sobre pedidos: <span id="pctSurtido">—</span></div>
+      </div>
+
+      <div class="card accent-green">
+        <div class="flex items-center justify-between">
+          <div class="k">Verificación (MTD)</div>
+          <span class="pill" id="badgeVerif">—</span>
+        </div>
+        <div class="metric" id="kpiVerif">—</div>
+        <div class="text-xs text-gray-500">% sobre pedidos: <span id="pctVerif">—</span></div>
+      </div>
+
+      <div class="card accent-cyan">
+        <div class="flex items-center justify-between">
+          <div class="k">Embarques (MTD)</div>
+          <span class="pill" id="badgeEmb">—</span>
+        </div>
+        <div class="metric" id="kpiEmb">—</div>
+        <div class="text-xs text-gray-500">% sobre pedidos: <span id="pctEmb">—</span></div>
+      </div>
+    </section>
+
+    <!-- Gráfica -->
+    <section class="card accent-blue">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm text-gray-600">Avance diario — Pedidos vs Etapas</div>
+        <div class="text-xs text-gray-400" id="chartSubtitle"></div>
+      </div>
+      <div class="w-full" style="height:320px;">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Detalle -->
+    <section class="card accent-blue">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <div class="font-medium">TABLERO (diario)</div>
+        <div class="text-sm text-gray-500" id="rowsCount">—</div>
+      </div>
+      <div class="overflow-auto">
+        <table class="table min-w-full text-sm">
+          <thead>
+            <tr class="text-xs uppercase text-gray-600">
+              <th class="text-left">Día</th>
+              <th class="text-right"># Pedidos</th>
+              <th class="text-right"># Partidas</th>
+              <th class="text-right"># Surtidos</th>
+              <th class="text-right">% Surt</th>
+              <th class="text-right"># Verif</th>
+              <th class="text-right">% Verif</th>
+              <th class="text-right"># Emb</th>
+              <th class="text-right">% Emb</th>
+            </tr>
+          </thead>
+          <tbody id="tbody" class="divide-y divide-gray-100"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div id="loading" class="fixed inset-0 bg-white/60 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="p-4 bg-white rounded-xl shadow border border-gray-200">
+      <div class="w-64 h-4 bg-gray-100 rounded mb-2"></div>
+      <div class="w-48 h-4 bg-gray-100 rounded"></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    $("month").value = new Date().toISOString().slice(0,7);
+
+    const EXCLUDE_WEEKENDS = true; // ponlo en false si quieres ver sábados y domingos
+    let chart;
+
+    const isWeekend = (iso) => {
+      try { const d = new Date(iso + "T00:00:00").getDay(); return d===0 || d===6; } catch { return false; }
+    };
+
+    const fmt = {
+      pct(x){ return (x==null) ? "—" : (Math.round(x*100)) + "%"; },
+      pct1(x){ return (x==null) ? "—" : (x*100).toFixed(1) + "%"; },
+      int(x){ return (x==null) ? "—" : new Intl.NumberFormat('es-MX').format(x); },
+      dec(x){ return (x==null) ? "—" : (Math.round(x * 100) / 100).toLocaleString('es-MX'); },
+      dateIso(d){ try{ const dt = new Date(d + "T00:00:00"); return dt.toLocaleDateString('es-MX', { weekday:'short', day: '2-digit', month: 'short' }); }catch{ return d; } },
+      monthName(m){ try{ const [y,mm]=m.split('-'); const dt=new Date(Number(y), Number(mm)-1, 1); return dt.toLocaleDateString('es-MX',{month:'long', year:'numeric'}); }catch{return m;} }
+    };
+
+    async function safeJson(res) {
+      const txt = await res.text();
+      try { return JSON.parse(txt); } catch { throw new Error(res.status + " " + res.statusText + ": " + txt); }
+    }
+    async function safeFetch(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(res.status + " " + res.statusText);
+      return safeJson(res);
+    }
+
+    function pillClass(pct, th={rojo:0.8, amarillo:0.9}){
+      if (pct==null) return 'pill-red';
+      if (pct >= th.amarillo) return 'pill-green';
+      if (pct >= th.rojo)     return 'pill-amber';
+      return 'pill-red';
+    }
+
+    function toCSV(rows) {
+      const cols = ["dia","pedidos","partidas","surtidos","pct_surtido","verificados","pct_verificacion","embarcados","pct_embarque"];
+      const head = cols.join(",");
+      const body = rows.map(r => cols.map(c => r[c] ?? "").join(",")).join("\n");
+      return head + "\n" + body;
+    }
+
+    document.getElementById("btnExport").addEventListener("click", () => {
+      if (!window.__rowsF) { alert("Primero carga datos."); return; }
+      const csv = toCSV(window.__rowsF);
+      const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+      const a = document.createElement('a');
+      const m = document.getElementById("month").value;
+      a.href = URL.createObjectURL(blob);
+      a.download = `tablero_diario_${m}.csv`;
+      a.click();
+    });
+
+    async function loadAll(){
+      const m = document.getElementById("month").value;
+      document.getElementById("loading").classList.remove("hidden");
+      try {
+        const [res, rows, set] = await Promise.all([
+          safeFetch(`/api/resultados?month=${m}`),
+          safeFetch(`/api/tablero?month=${m}`),
+          safeFetch(`/api/settings?month=${m}`).catch(()=> ({})),
+        ]);
+
+        // Fecha límite MTD (evita días futuros y la confusión del “mañana” por la regla 13:05)
+        const limitDay = (res?.resultados_dia?.dia) || null;
+
+        // Filtrar tabla y gráfica hasta limitDay y (opcional) excluir fines de semana
+        let rowsF = rows.filter(r => (!limitDay || r.dia <= limitDay) && (!EXCLUDE_WEEKENDS || !isWeekend(r.dia)));
+        window.__rowsF = rowsF;
+
+        document.getElementById("rowsCount").textContent = `${rowsF.length} días (hasta ${limitDay || '—'})`;
+
+        // Header
+        document.getElementById("hdrMes").textContent = fmt.monthName(res.periodo);
+        document.getElementById("hdrHabiles").textContent = fmt.int(res.dias_habiles_mes);
+        document.getElementById("hdrTrans").textContent = fmt.int(res.dias_transcurridos);
+        document.getElementById("hdrPend").textContent = fmt.int(res.dias_pendientes);
+
+        // Resultado del día
+        const rd = res.resultados_dia || {};
+        const pedDia = Number(rd.pedidos || 0);
+        const pctSurDia = pedDia ? (Number(rd.surtidos || 0) / pedDia) : null;
+        const pctEmbDia = pedDia ? (Number(rd.embarcados || 0) / pedDia) : null;
+
+        document.getElementById("rdDia").textContent  = rd.dia ? new Date(rd.dia + "T00:00:00").toLocaleDateString('es-MX', { weekday:'long', year:'numeric', month:'short', day:'2-digit'}) : "—";
+        document.getElementById("rdPed").textContent  = fmt.int(rd.pedidos);
+        document.getElementById("rdPart").textContent = fmt.int(rd.partidas);
+
+        const capDia = (res.capacidad_diaria && res.capacidad_diaria.surtido) ? res.capacidad_diaria.surtido : null;
+        document.getElementById("rdCapInst").textContent = fmt.int(capDia);
+        const capUtilDia = (capDia ? (rd.partidas || 0) / capDia : null);
+        document.getElementById("rdCapUtil").textContent = fmt.pct1(capUtilDia);
+
+        document.getElementById("rdSur").textContent  = fmt.int(rd.surtidos);
+        document.getElementById("rdSurPct").textContent  = fmt.pct1(pctSurDia);
+        document.getElementById("rdVer").textContent  = fmt.int(rd.verificados);
+        document.getElementById("rdEmb").textContent  = fmt.int(rd.embarcados);
+        document.getElementById("rdEmbPct").textContent  = fmt.pct1(pctEmbDia);
+
+        // Acumulado diario (totales MTD)
+        document.getElementById("pmInfo").textContent = (res.dias_transcurridos != null) ? `Con ${res.dias_transcurridos} días hábiles (hasta ${limitDay || '—'})` : "—";
+        const pm = res.promedio_diario_mtd || {};
+        document.getElementById("pmPed").textContent  = fmt.dec(pm.pedidos);
+        document.getElementById("pmPart").textContent = fmt.dec(pm.partidas);
+        const capInstMTD = (capDia && res.dias_transcurridos) ? (capDia * res.dias_transcurridos) : null;
+        const capUtilMTD = (capInstMTD ? (res.partidas_mtd || 0) / capInstMTD : null);
+        document.getElementById("pmCapInst").textContent = fmt.int(capInstMTD);
+        document.getElementById("pmCapUtil").textContent = fmt.pct1(capUtilMTD);
+        document.getElementById("pmSur").textContent  = fmt.dec(pm.surtidos);
+        document.getElementById("pmVer").textContent  = fmt.dec(pm.verificados);
+        document.getElementById("pmEmb").textContent  = fmt.dec(pm.embarcados);
+
+        // KPIs MTD
+        const th = (set && set.thresholds) ? set.thresholds : {rojo:0.8, amarillo:0.9};
+        document.getElementById("kpiSurtidos").textContent = fmt.int(res.surtidos_mtd);
+        document.getElementById("pctSurtido").textContent  = fmt.pct(res.pct_surtido);
+        document.getElementById("kpiVerif").textContent    = fmt.int(res.verificados_mtd);
+        document.getElementById("pctVerif").textContent    = fmt.pct(res.pct_verificacion);
+        document.getElementById("kpiEmb").textContent      = fmt.int(res.embarcados_mtd);
+        document.getElementById("pctEmb").textContent      = fmt.pct(res.pct_embarque);
+
+        // Bono en equipo
+        const bono = res.bono_en_equipo || {};
+        const conteo = bono.conteo || {verde:0, ambar:0, rojo:0};
+        document.getElementById("bonoDiasTrans").textContent = fmt.int(bono.dias_transcurridos || res.dias_transcurridos || 0);
+        document.getElementById("bono90").textContent = fmt.int(conteo.verde || 0);
+        document.getElementById("bono80").textContent = fmt.int(conteo.ambar || 0);
+        document.getElementById("bono79").textContent = fmt.int(conteo.rojo || 0);
+
+        // ===== Bono mensual: prioriza backend (puntos + %) y filtra filas futuras =====
+        (function applyBono(){
+          const pickNum = (...vals) => {
+            for (const v of vals){
+              if (v === undefined || v === null || v === "") continue;
+              const n = Number(v);
+              if (!Number.isNaN(n)) return n;
+            }
+            return null;
+          };
+
+          // % preferente del backend
+          let pEmbMTD = pickNum(
+            res?.bono_mensual?.porcentaje_embarque_mtd,
+            res?.bono_header?.porcentaje_embarque_mtd,
+            res?.pct_embarque
+          );
+          if (pEmbMTD == null) {
+            const pedMTD = Number(res.pedidos_mtd || 0);
+            const embMTD = Number(res.embarcados_mtd || 0);
+            pEmbMTD = pedMTD ? (embMTD / pedMTD) : null;
+          }
+
+          // Puntos preferentes del backend
+          let puntos = pickNum(res?.bono_mensual?.puntos);
+          if (puntos == null && pEmbMTD != null){
+            if      (pEmbMTD >= 1.0)    puntos = 6;
+            else if (pEmbMTD >= 0.8999) puntos = 5;
+            else if (pEmbMTD >= 0.80)   puntos = 3;
+            else                        puntos = 0;
+          }
+
+          const pctText = (pEmbMTD==null? "—" : (pEmbMTD*100).toFixed(1)+"%");
+          document.getElementById("bonoMesLabel").textContent = `${fmt.monthName(res.periodo)} · hasta ${limitDay || '—'}`;
+          document.getElementById("bonoMesPctBox").textContent = pctText;
+          const bonoMTDPctEl = document.getElementById("bonoMTDPct");
+          if (bonoMTDPctEl) bonoMTDPctEl.textContent = pctText;
+
+          const pointsEl = document.getElementById("bonoMesValor");
+          if (pointsEl){
+            pointsEl.className = "text-3xl font-extrabold inline-flex items-center px-3 py-1 rounded-lg ring-1";
+            let color = "text-gray-700 bg-gray-50 ring-gray-200";
+            if (puntos === 6)      color = "text-green-700 bg-green-50 ring-green-200";
+            else if (puntos === 5) color = "text-blue-700 bg-blue-50 ring-blue-200";
+            else if (puntos === 3) color = "text-amber-700 bg-amber-50 ring-amber-200";
+            else if (puntos === 0) color = "text-red-700 bg-red-50 ring-red-200";
+            pointsEl.className += " " + color;
+            pointsEl.textContent = (puntos==null? "—" : `${puntos} pts`);
+          }
+        })();
+
+        // Tabla filtrada
+        const tbody = document.getElementById("tbody"); tbody.innerHTML = "";
+        rowsF.forEach(r => {
+          const pS = r.pct_surtido, pV = r.pct_verificacion, pE = r.pct_embarque;
+          const pillS = pillClass(pS), pillV = pillClass(pV), pillE = pillClass(pE);
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-slate-50";
+          tr.innerHTML = `
+            <td class="text-left whitespace-nowrap">${fmt.dateIso(r.dia)}</td>
+            <td class="text-right">${fmt.int(r.pedidos)}</td>
+            <td class="text-right">${fmt.int(r.partidas)}</td>
+            <td class="text-right">${fmt.int(r.surtidos)}</td>
+            <td class="text-right"><span class="pill ${pillS}">${fmt.pct(pS)}</span></td>
+            <td class="text-right">${fmt.int(r.verificados)}</td>
+            <td class="text-right"><span class="pill ${pillV}">${fmt.pct(pV)}</span></td>
+            <td class="text-right">${fmt.int(r.embarcados)}</td>
+            <td class="text-right"><span class="pill ${pillE}">${fmt.pct(pE)}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Gráfica filtrada
+        const labels = rowsF.map(r => r.dia);
+        const pedidos = rowsF.map(r => r.pedidos || 0);
+        const surtidos = rowsF.map(r => r.surtidos || 0);
+        const verificados = rowsF.map(r => r.verificados || 0);
+        const embarcados = rowsF.map(r => r.embarcados || 0);
+        document.getElementById("chartSubtitle").textContent = `Periodo: ${res.periodo} · ${rowsF.length} días · hasta: ${limitDay || '—'}`;
+
+        const data = {
+          labels,
+          datasets: [
+            { label: 'Pedidos', data: pedidos, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.12)', borderWidth:2, tension:.2, pointRadius:2, spanGaps:true },
+            { label: 'Surtidos', data: surtidos, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.12)', borderWidth:2, tension:.2, pointRadius:2, spanGaps:true },
+            { label: 'Verificados', data: verificados, borderColor:'#16a34a', backgroundColor:'rgba(22,163,74,0.12)', borderWidth:2, tension:.2, pointRadius:2, spanGaps:true },
+            { label: 'Embarcados', data: embarcados, borderColor:'#0ea5e9', backgroundColor:'rgba(14,165,233,0.12)', borderWidth:2, tension:.2, pointRadius:2, spanGaps:true },
+          ]
+        };
+        const cfg = { type: 'line', data, options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }};
+        const ctx = document.getElementById('lineChart');
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, cfg);
+
+      } catch(err) {
+        console.error(err);
+        alert("Error al cargar: " + err.message);
+      } finally {
+        document.getElementById("loading").classList.add("hidden");
+      }
+    }
+
+    document.getElementById("btnLoad").addEventListener("click", loadAll);
+    loadAll().catch(err => alert("Error al cargar: " + err.message));
+  </script>
+</body>
+</html>
