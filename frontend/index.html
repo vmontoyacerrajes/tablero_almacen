@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Tablero de Operaciones</title>
-  <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     body.bg-soft-blue{
@@ -83,22 +81,31 @@
         </div>
         <div class="divider"></div>
 
+        <!-- ✅ Pendientes + total para “avance real” -->
         <div class="grid grid-cols-3 gap-3">
           <div>
             <div class="k">Pedidos</div>
             <div class="v-lg" id="rdPed">—</div>
           </div>
           <div>
-            <div class="k">Partidas</div>
-            <div class="v-lg" id="rdPart">—</div>
+            <div class="k">Pend. previos</div>
+            <div class="v-lg" id="rdPendPrev">—</div>
           </div>
           <div>
-            <div class="k">Cap. instalada</div>
-            <div class="v" id="rdCapInst">—</div>
+            <div class="k">Total a surtir</div>
+            <div class="v-lg" id="rdTotal">—</div>
           </div>
 
           <div>
-            <div class="k">Cap. utilizada</div>
+            <div class="k">Partidas</div>
+            <div class="v" id="rdPart">—</div>
+          </div>
+          <div>
+            <div class="k">Cap. instalada acum</div>
+            <div class="v" id="rdCapInst">—</div>
+          </div>
+          <div>
+            <div class="k">Cap. utilizada acum</div>
             <div class="v" id="rdCapUtil">—</div>
           </div>
 
@@ -112,7 +119,10 @@
 
           <div>
             <div class="k">Verificados</div>
-            <div class="v-lg" id="rdVer">—</div>
+            <div class="flex items-baseline gap-2">
+              <div class="v-lg" id="rdVer">—</div>
+              <div class="text-xs text-gray-500" id="rdVerPct">—</div>
+            </div>
           </div>
 
           <div>
@@ -127,7 +137,7 @@
 
       <div class="card accent-cyan">
         <div class="flex items-center justify-between">
-          <div class="font-semibold">Acumulado diario</div>
+          <div class="font-semibold">Acumulado (MTD)</div>
           <div class="text-xs text-gray-500" id="pmInfo">—</div>
         </div>
         <div class="divider"></div>
@@ -190,7 +200,7 @@
         <div class="text-3xl font-extrabold inline-flex items-center px-3 py-1 rounded-lg ring-1" id="bonoMesValor">—</div>
 
         <div class="text-xs text-gray-500 mt-3">
-          Regla: % embarque MTD → puntos (≥100%: 6 · ≥89.99%: 5 · ≥80%: 3 · &lt;80%: 0)
+          Regla: % embarque MTD → días (≥100%: 6 · ≥89.99%: 5 · ≥80%: 3 · &lt;80%: 0)
         </div>
       </div>
     </section>
@@ -247,14 +257,24 @@
           <thead>
             <tr class="text-xs uppercase text-gray-600">
               <th class="text-left">Día</th>
-              <th class="text-right"># Pedidos</th>
+              <th class="text-right" title="Pedidos cuya BASE cae en el día (día programado)"># Pedidos</th>
+              <th class="text-right" title="Pendientes previos al inicio del día (BASE < día y NO embarcados antes de ese día)">PEND. PREV</th>
+              <th class="text-right" title="Total a surtir neto = pedidos del día + pendientes previos">TOTAL</th>
               <th class="text-right"># Partidas</th>
+
               <th class="text-right"># Surtidos</th>
               <th class="text-right">% Surt</th>
+
               <th class="text-right"># Verif</th>
               <th class="text-right">% Verif</th>
+
               <th class="text-right"># Emb</th>
               <th class="text-right">% Emb</th>
+
+              <!-- NUEVO: Atrasos resueltos hoy -->
+              <th class="text-right" title="Atrasos RESUELTOS HOY (base < día): pedidos atrasados que se surtieron hoy.">ATR SUR</th>
+              <th class="text-right" title="Atrasos RESUELTOS HOY (base < día): pedidos atrasados que se verificaron hoy.">ATR VER</th>
+              <th class="text-right" title="Atrasos RESUELTOS HOY (base < día): pedidos atrasados que se embarcaron hoy.">ATR EMB</th>
             </tr>
           </thead>
           <tbody id="tbody" class="divide-y divide-gray-100"></tbody>
@@ -274,7 +294,7 @@
     const $ = (id) => document.getElementById(id);
     $("month").value = new Date().toISOString().slice(0,7);
 
-    const EXCLUDE_WEEKENDS = true; // ponlo en false si quieres ver sábados y domingos
+    const EXCLUDE_WEEKENDS = true;
     let chart;
 
     const isWeekend = (iso) => {
@@ -307,10 +327,29 @@
       return 'pill-red';
     }
 
+    function pickNum(...vals){
+      for (const v of vals){
+        if (v === undefined || v === null || v === "") continue;
+        const n = Number(v);
+        if (!Number.isNaN(n)) return n;
+      }
+      return null;
+    }
+
     function toCSV(rows) {
-      const cols = ["dia","pedidos","partidas","surtidos","pct_surtido","verificados","pct_verificacion","embarcados","pct_embarque"];
+      const cols = [
+        "dia","pedidos","pend_surtido_prev_neto","total_a_surtir_neto","partidas",
+        "surtidos","pct_surtido","verificados","pct_verificacion","embarcados","pct_embarque",
+        "atrasos.surtido_inicio","atrasos.verificacion_inicio","atrasos.embarque_inicio",
+        "atrasos.surtido_resuelto_hoy","atrasos.verificacion_resuelto_hoy","atrasos.embarque_resuelto_hoy"
+      ];
       const head = cols.join(",");
-      const body = rows.map(r => cols.map(c => r[c] ?? "").join(",")).join("\n");
+      const get = (r, c) => {
+        if (!c.includes(".")) return (r[c] ?? "");
+        const [a,b] = c.split(".");
+        return (r[a] && r[a][b] != null) ? r[a][b] : "";
+      };
+      const body = rows.map(r => cols.map(c => get(r,c)).join(",")).join("\n");
       return head + "\n" + body;
     }
 
@@ -335,11 +374,10 @@
           safeFetch(`/api/settings?month=${m}`).catch(()=> ({})),
         ]);
 
-        // Fecha límite MTD (evita días futuros y la confusión del “mañana” por la regla 13:05)
         const limitDay = (res?.resultados_dia?.dia) || null;
 
         // Filtrar tabla y gráfica hasta limitDay y (opcional) excluir fines de semana
-        let rowsF = rows.filter(r => (!limitDay || r.dia <= limitDay) && (!EXCLUDE_WEEKENDS || !isWeekend(r.dia)));
+        let rowsF = (rows || []).filter(r => (!limitDay || r.dia <= limitDay) && (!EXCLUDE_WEEKENDS || !isWeekend(r.dia)));
         window.__rowsF = rowsF;
 
         document.getElementById("rowsCount").textContent = `${rowsF.length} días (hasta ${limitDay || '—'})`;
@@ -350,48 +388,73 @@
         document.getElementById("hdrTrans").textContent = fmt.int(res.dias_transcurridos);
         document.getElementById("hdrPend").textContent = fmt.int(res.dias_pendientes);
 
-        // Resultado del día
+        const th = (set && set.thresholds) ? set.thresholds : {rojo:0.8, amarillo:0.9};
+
+        // ====== Resultado del día (FUENTE: resultados_dia) ======
         const rd = res.resultados_dia || {};
-        const pedDia = Number(rd.pedidos || 0);
-        const pctSurDia = pedDia ? (Number(rd.surtidos || 0) / pedDia) : null;
-        const pctEmbDia = pedDia ? (Number(rd.embarcados || 0) / pedDia) : null;
+        const pedDia  = Number(rd.pedidos || 0);
+        const partDia = Number(rd.partidas || 0);
+        const surDia  = Number(rd.surtidos || 0);
+        const verDia  = Number(rd.verificados || 0);
+        const embDia  = Number(rd.embarcados || 0);
 
-        document.getElementById("rdDia").textContent  = rd.dia ? new Date(rd.dia + "T00:00:00").toLocaleDateString('es-MX', { weekday:'long', year:'numeric', month:'short', day:'2-digit'}) : "—";
-        document.getElementById("rdPed").textContent  = fmt.int(rd.pedidos);
-        document.getElementById("rdPart").textContent = fmt.int(rd.partidas);
+        const pendPrev = Number(rd.pend_surtido_prev ?? rd.pend_surtido_prev_neto ?? 0);
+        const totalDia = Number(rd.total_a_surtir ?? rd.total_a_surtir_neto ?? (pedDia + pendPrev));
 
-        const capDia = (res.capacidad_diaria && res.capacidad_diaria.surtido) ? res.capacidad_diaria.surtido : null;
-        document.getElementById("rdCapInst").textContent = fmt.int(capDia);
-        const capUtilDia = (capDia ? (rd.partidas || 0) / capDia : null);
-        document.getElementById("rdCapUtil").textContent = fmt.pct1(capUtilDia);
+        const pctSurDia = totalDia ? (surDia / totalDia) : null;
+        const pctVerDia = totalDia ? (verDia / totalDia) : null;
+        const pctEmbDia = totalDia ? (embDia / totalDia) : null;
 
-        document.getElementById("rdSur").textContent  = fmt.int(rd.surtidos);
+        document.getElementById("rdDia").textContent  = rd.dia
+          ? new Date(rd.dia + "T00:00:00").toLocaleDateString('es-MX', { weekday:'long', year:'numeric', month:'short', day:'2-digit'})
+          : "—";
+
+        document.getElementById("rdPed").textContent  = fmt.int(pedDia);
+        document.getElementById("rdPendPrev").textContent = fmt.int(pendPrev);
+        document.getElementById("rdTotal").textContent = fmt.int(totalDia);
+
+        document.getElementById("rdPart").textContent = fmt.int(partDia);
+
+        // ✅ Capacidad acumulada al corte (backend)
+        document.getElementById("rdCapInst").textContent = fmt.int(pickNum(rd.capacidad_instalada_acum));
+        document.getElementById("rdCapUtil").textContent = fmt.pct1(pickNum(rd.pct_capacidad_utilizada_acum));
+
+        document.getElementById("rdSur").textContent  = fmt.int(surDia);
         document.getElementById("rdSurPct").textContent  = fmt.pct1(pctSurDia);
-        document.getElementById("rdVer").textContent  = fmt.int(rd.verificados);
-        document.getElementById("rdEmb").textContent  = fmt.int(rd.embarcados);
+
+        document.getElementById("rdVer").textContent  = fmt.int(verDia);
+        document.getElementById("rdVerPct").textContent  = fmt.pct1(pctVerDia);
+
+        document.getElementById("rdEmb").textContent  = fmt.int(embDia);
         document.getElementById("rdEmbPct").textContent  = fmt.pct1(pctEmbDia);
 
-        // Acumulado diario (totales MTD)
-        document.getElementById("pmInfo").textContent = (res.dias_transcurridos != null) ? `Con ${res.dias_transcurridos} días hábiles (hasta ${limitDay || '—'})` : "—";
+        // ====== Acumulado MTD (usar backend, sin recomputar) ======
+        document.getElementById("pmInfo").textContent =
+          (res.dias_transcurridos != null) ? `Con ${res.dias_transcurridos} días hábiles (hasta ${limitDay || '—'})` : "—";
+
         const pm = res.promedio_diario_mtd || {};
         document.getElementById("pmPed").textContent  = fmt.dec(pm.pedidos);
         document.getElementById("pmPart").textContent = fmt.dec(pm.partidas);
-        const capInstMTD = (capDia && res.dias_transcurridos) ? (capDia * res.dias_transcurridos) : null;
-        const capUtilMTD = (capInstMTD ? (res.partidas_mtd || 0) / capInstMTD : null);
-        document.getElementById("pmCapInst").textContent = fmt.int(capInstMTD);
-        document.getElementById("pmCapUtil").textContent = fmt.pct1(capUtilMTD);
+
+        document.getElementById("pmCapInst").textContent = fmt.int(res.capacidad_instalada ?? null);
+        document.getElementById("pmCapUtil").textContent = fmt.pct1(res.pct_capacidad_utilizada ?? null);
+
         document.getElementById("pmSur").textContent  = fmt.dec(pm.surtidos);
         document.getElementById("pmVer").textContent  = fmt.dec(pm.verificados);
         document.getElementById("pmEmb").textContent  = fmt.dec(pm.embarcados);
 
         // KPIs MTD
-        const th = (set && set.thresholds) ? set.thresholds : {rojo:0.8, amarillo:0.9};
         document.getElementById("kpiSurtidos").textContent = fmt.int(res.surtidos_mtd);
         document.getElementById("pctSurtido").textContent  = fmt.pct(res.pct_surtido);
         document.getElementById("kpiVerif").textContent    = fmt.int(res.verificados_mtd);
         document.getElementById("pctVerif").textContent    = fmt.pct(res.pct_verificacion);
         document.getElementById("kpiEmb").textContent      = fmt.int(res.embarcados_mtd);
         document.getElementById("pctEmb").textContent      = fmt.pct(res.pct_embarque);
+
+        // Badges (semaforo)
+        $("badgeSurtido").className = `pill ${pillClass(res.pct_surtido, th)}`;
+        $("badgeVerif").className   = `pill ${pillClass(res.pct_verificacion, th)}`;
+        $("badgeEmb").className     = `pill ${pillClass(res.pct_embarque, th)}`;
 
         // Bono en equipo
         const bono = res.bono_en_equipo || {};
@@ -401,18 +464,8 @@
         document.getElementById("bono80").textContent = fmt.int(conteo.ambar || 0);
         document.getElementById("bono79").textContent = fmt.int(conteo.rojo || 0);
 
-        // ===== Bono mensual: prioriza backend (puntos + %) y filtra filas futuras =====
+        // Bono mensual (mostrar como “días”)
         (function applyBono(){
-          const pickNum = (...vals) => {
-            for (const v of vals){
-              if (v === undefined || v === null || v === "") continue;
-              const n = Number(v);
-              if (!Number.isNaN(n)) return n;
-            }
-            return null;
-          };
-
-          // % preferente del backend
           let pEmbMTD = pickNum(
             res?.bono_mensual?.porcentaje_embarque_mtd,
             res?.bono_header?.porcentaje_embarque_mtd,
@@ -424,13 +477,12 @@
             pEmbMTD = pedMTD ? (embMTD / pedMTD) : null;
           }
 
-          // Puntos preferentes del backend
-          let puntos = pickNum(res?.bono_mensual?.puntos);
-          if (puntos == null && pEmbMTD != null){
-            if      (pEmbMTD >= 1.0)    puntos = 6;
-            else if (pEmbMTD >= 0.8999) puntos = 5;
-            else if (pEmbMTD >= 0.80)   puntos = 3;
-            else                        puntos = 0;
+          let dias = pickNum(res?.bono_mensual?.puntos);
+          if (dias == null && pEmbMTD != null){
+            if      (pEmbMTD >= 1.0)    dias = 6;
+            else if (pEmbMTD >= 0.8999) dias = 5;
+            else if (pEmbMTD >= 0.80)   dias = 3;
+            else                        dias = 0;
           }
 
           const pctText = (pEmbMTD==null? "—" : (pEmbMTD*100).toFixed(1)+"%");
@@ -443,37 +495,60 @@
           if (pointsEl){
             pointsEl.className = "text-3xl font-extrabold inline-flex items-center px-3 py-1 rounded-lg ring-1";
             let color = "text-gray-700 bg-gray-50 ring-gray-200";
-            if (puntos === 6)      color = "text-green-700 bg-green-50 ring-green-200";
-            else if (puntos === 5) color = "text-blue-700 bg-blue-50 ring-blue-200";
-            else if (puntos === 3) color = "text-amber-700 bg-amber-50 ring-amber-200";
-            else if (puntos === 0) color = "text-red-700 bg-red-50 ring-red-200";
+            if (dias === 6)      color = "text-green-700 bg-green-50 ring-green-200";
+            else if (dias === 5) color = "text-blue-700 bg-blue-50 ring-blue-200";
+            else if (dias === 3) color = "text-amber-700 bg-amber-50 ring-amber-200";
+            else if (dias === 0) color = "text-red-700 bg-red-50 ring-red-200";
             pointsEl.className += " " + color;
-            pointsEl.textContent = (puntos==null? "—" : `${puntos} pts`);
+            pointsEl.textContent = (dias==null? "—" : `${dias} días`);
           }
         })();
 
-        // Tabla filtrada
+        // ====== Tabla diaria (pct_* ya viene calculado contra TOTAL NETO) ======
         const tbody = document.getElementById("tbody"); tbody.innerHTML = "";
         rowsF.forEach(r => {
           const pS = r.pct_surtido, pV = r.pct_verificacion, pE = r.pct_embarque;
-          const pillS = pillClass(pS), pillV = pillClass(pV), pillE = pillClass(pE);
+
+          const pend = Number(r.pend_surtido_prev_neto ?? 0);
+          const tot  = Number(r.total_a_surtir_neto ?? ((r.pedidos||0) + pend));
+
+          const atr = r.atrasos || {};
+          const atrSur = Number(atr.surtido_resuelto_hoy || 0);
+          const atrVer = Number(atr.verificacion_resuelto_hoy || 0);
+          const atrEmb = Number(atr.embarque_resuelto_hoy || 0);
+
+          const tipSur = "Atrasos RESUELTOS hoy (base < día): pedidos atrasados surtidos hoy";
+          const tipVer = "Atrasos RESUELTOS hoy (base < día): pedidos atrasados verificados hoy";
+          const tipEmb = "Atrasos RESUELTOS hoy (base < día): pedidos atrasados embarcados hoy";
+
           const tr = document.createElement("tr");
           tr.className = "hover:bg-slate-50";
           tr.innerHTML = `
             <td class="text-left whitespace-nowrap">${fmt.dateIso(r.dia)}</td>
+
             <td class="text-right">${fmt.int(r.pedidos)}</td>
+            <td class="text-right">${fmt.int(pend)}</td>
+            <td class="text-right font-semibold">${fmt.int(tot)}</td>
+
             <td class="text-right">${fmt.int(r.partidas)}</td>
+
             <td class="text-right">${fmt.int(r.surtidos)}</td>
-            <td class="text-right"><span class="pill ${pillS}">${fmt.pct(pS)}</span></td>
+            <td class="text-right"><span class="pill ${pillClass(pS, th)}">${fmt.pct(pS)}</span></td>
+
             <td class="text-right">${fmt.int(r.verificados)}</td>
-            <td class="text-right"><span class="pill ${pillV}">${fmt.pct(pV)}</span></td>
+            <td class="text-right"><span class="pill ${pillClass(pV, th)}">${fmt.pct(pV)}</span></td>
+
             <td class="text-right">${fmt.int(r.embarcados)}</td>
-            <td class="text-right"><span class="pill ${pillE}">${fmt.pct(pE)}</span></td>
+            <td class="text-right"><span class="pill ${pillClass(pE, th)}">${fmt.pct(pE)}</span></td>
+
+            <td class="text-right" title="${tipSur}">${fmt.int(atrSur)}</td>
+            <td class="text-right" title="${tipVer}">${fmt.int(atrVer)}</td>
+            <td class="text-right" title="${tipEmb}">${fmt.int(atrEmb)}</td>
           `;
           tbody.appendChild(tr);
         });
 
-        // Gráfica filtrada
+        // Gráfica
         const labels = rowsF.map(r => r.dia);
         const pedidos = rowsF.map(r => r.pedidos || 0);
         const surtidos = rowsF.map(r => r.surtidos || 0);

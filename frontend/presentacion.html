@@ -51,6 +51,8 @@
     .tab-panel.active{ display:block; }
 
     #chartWrap{ height: 62vh; }
+    .table th { background:#f8fafc; position:sticky; top:0; z-index:1; }
+    .table th, .table td { padding:10px 12px; }
   </style>
 </head>
 <body class="bg-soft-blue text-slate-900">
@@ -103,8 +105,8 @@
           <div class="grid grid-cols-3 gap-3">
             <div><div class="k">Pedidos</div><div class="v-lg" id="rdPed">—</div></div>
             <div><div class="k">Partidas</div><div class="v-lg" id="rdPart">—</div></div>
-            <div><div class="k">Cap. instalada</div><div class="v" id="rdCapInst">—</div></div>
-            <div><div class="k">Cap. utilizada</div><div class="v" id="rdCapUtil">—</div></div>
+            <div><div class="k">Cap. diaria</div><div class="v" id="rdCapInst">—</div></div>
+            <div><div class="k">Cap. utilizada (acum)</div><div class="v" id="rdCapUtil">—</div></div>
             <div>
               <div class="k">Surtidos</div>
               <div class="flex items-baseline gap-2">
@@ -121,11 +123,16 @@
               </div>
             </div>
           </div>
+
+          <div class="divider"></div>
+          <div class="text-xs text-gray-500">
+            Denominador del día: <b>Total a surtir</b> (pedidos del día + pendientes previos).
+          </div>
         </div>
 
         <div class="card accent-cyan">
           <div class="flex items-center justify-between">
-            <div class="font-semibold">Acumulado diario</div>
+            <div class="font-semibold">Acumulado MTD</div>
             <div class="text-xs text-gray-500" id="pmInfo">—</div>
           </div>
           <div class="divider"></div>
@@ -133,7 +140,7 @@
             <div><div class="k">Pedidos</div><div class="v" id="pmPed">—</div></div>
             <div><div class="k">Partidas</div><div class="v" id="pmPart">—</div></div>
             <div><div class="k">Cap. instalada</div><div class="v" id="pmCapInst">—</div></div>
-            <div><div class="k">Cap. utilizada</div><div class="v" id="pmCapUtil">—</div></div>
+            <div><div class="k">% Cap. utilizada</div><div class="v" id="pmCapUtil">—</div></div>
             <div><div class="k">Surtidos</div><div class="v" id="pmSur">—</div></div>
             <div><div class="k">Verificados</div><div class="v" id="pmVer">—</div></div>
             <div><div class="k">Embarcados</div><div class="v" id="pmEmb">—</div></div>
@@ -187,7 +194,7 @@
           <div class="text-3xl font-extrabold inline-flex items-center px-3 py-1 rounded-lg ring-1" id="bonoMesValor">—</div>
 
           <div class="text-xs text-gray-500 mt-3">
-            Regla: % embarque MTD → puntos (≥100%: 6 · ≥89.99%: 5 · ≥80%: 3 · &lt;80%: 0)
+            Regla: % embarque MTD → días (≥100%: 6 · ≥89.99%: 5 · ≥80%: 3 · &lt;80%: 0)
           </div>
         </div>
       </div>
@@ -220,8 +227,7 @@
           <div><div class="k">Total a surtir (día)</div><div class="metric" id="resDiaTotal">—</div></div>
         </div>
         <div class="text-xs text-gray-500 mt-2">
-          Denominador de % = Total a surtir (pedidos del día + pendientes previos).<br/>
-          Fechas según embarque <b>calculado</b> (regla 13:05 y fin de semana).
+          Denominador de % = Total a surtir (pedidos del día + pendientes previos).
         </div>
       </div>
 
@@ -247,6 +253,46 @@
           <div class="text-xs text-gray-500 mt-3">% = Embarcados / Total a surtir</div>
         </div>
       </div>
+
+      <!-- ✅ NUEVO: ATR (Atrasos y Resueltos hoy) -->
+      <div class="card accent-blue">
+        <div class="flex items-center justify-between">
+          <div class="font-semibold">Atrasos (inicio del día) y avance sobre atrasados</div>
+          <div class="text-xs text-gray-500">ATR SUR / ATR VER / ATR EMB</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="border rounded-xl p-4">
+            <div class="k">Atraso surtido (inicio)</div>
+            <div class="metric" id="atrSurIni">—</div>
+            <div class="divider"></div>
+            <div class="k">Resuelto hoy (ATR SUR)</div>
+            <div class="v-lg" id="atrSurHoy">—</div>
+          </div>
+
+          <div class="border rounded-xl p-4">
+            <div class="k">Atraso verificación (inicio)</div>
+            <div class="metric" id="atrVerIni">—</div>
+            <div class="divider"></div>
+            <div class="k">Resuelto hoy (ATR VER)</div>
+            <div class="v-lg" id="atrVerHoy">—</div>
+          </div>
+
+          <div class="border rounded-xl p-4">
+            <div class="k">Atraso embarque (inicio)</div>
+            <div class="metric" id="atrEmbIni">—</div>
+            <div class="divider"></div>
+            <div class="k">Resuelto hoy (ATR EMB)</div>
+            <div class="v-lg" id="atrEmbHoy">—</div>
+          </div>
+        </div>
+
+        <div class="text-xs text-gray-500 mt-3">
+          <b>Inicio</b> = pedidos con base &lt; día y todavía pendientes de esa etapa.<br/>
+          <b>Resuelto hoy</b> = cuántos atrasados se resolvieron hoy en esa etapa (según <code>atrasos.*_resuelto_hoy</code> del backend).
+        </div>
+      </div>
     </section>
   </div>
 
@@ -262,7 +308,7 @@
     const qs = (sel) => document.querySelector(sel);
     const qsa = (sel) => Array.from(document.querySelectorAll(sel));
 
-    const EXCLUDE_WEEKENDS = true; // ponlo en false si quieres mostrar sábados y domingos
+    const EXCLUDE_WEEKENDS = true;
 
     function getURLMonth(){
       try{ const u = new URL(window.location.href); return u.searchParams.get('month'); }catch{return null;}
@@ -304,6 +350,20 @@
       return 'pill-red';
     }
 
+    function getCapDiaria(res){
+      if (res && typeof res.capacidad_diaria === "number") return res.capacidad_diaria;
+      if (res && res.capacidad_diaria && typeof res.capacidad_diaria.surtido === "number") return res.capacidad_diaria.surtido;
+      return null;
+    }
+
+    function firstVal(obj, ...keys){
+      for (const k of keys) {
+        const v = obj ? obj[k] : null;
+        if (v !== undefined && v !== null && v !== "") return Number(v);
+      }
+      return null;
+    }
+
     async function loadAll(){
       const m = monthInput.value;
       $("loading").classList.remove("hidden");
@@ -317,24 +377,16 @@
         const limitDay = (res?.resultados_dia?.dia) || null;
         const rowsF = (rows||[]).filter(r => (!limitDay || r.dia <= limitDay) && (!EXCLUDE_WEEKENDS || !isWeekend(r.dia)));
 
-        // Encabezados
         $("hdrMes").textContent = fmt.monthName(res.periodo);
         $("hdrHabiles").textContent = fmt.int(res.dias_habiles_mes);
         $("hdrTrans").textContent = fmt.int(res.dias_transcurridos);
         $("hdrPend").textContent = fmt.int(res.dias_pendientes);
 
-        // Día
+        const th = (set && set.thresholds) ? set.thresholds : {rojo:0.8, amarillo:0.9};
+
         const rd = res.resultados_dia || {};
         const diaRef = rd.dia || null;
         const rowHoy = rowsF.find(r => r.dia === diaRef) || null;
-
-        const firstVal = (obj, ...keys) => {
-          for (const k of keys) {
-            const v = obj ? obj[k] : null;
-            if (v !== undefined && v !== null && v !== "") return Number(v);
-          }
-          return null;
-        };
 
         const pedDia  = firstVal(rowHoy, "pedidos")  ?? Number(rd.pedidos   || 0);
         const partDia = firstVal(rowHoy, "partidas") ?? Number(rd.partidas  || 0);
@@ -364,13 +416,20 @@
         $("rdDia").textContent  = rd.dia
           ? new Date(rd.dia + "T00:00:00").toLocaleDateString('es-MX', { weekday:'long', year:'numeric', month:'short', day:'2-digit'})
           : "—";
+
         $("rdPed").textContent  = fmt.int(pedDia);
         $("rdPart").textContent = fmt.int(partDia);
 
-        const capDia = (res.capacidad_diaria && res.capacidad_diaria.surtido) ? res.capacidad_diaria.surtido : null;
+        const capDia = getCapDiaria(res);
         $("rdCapInst").textContent = fmt.int(capDia);
-        const capUtilDia = (capDia ? (partDia || 0) / capDia : null);
-        $("rdCapUtil").textContent = fmt.pct1(capUtilDia);
+
+        const rdCapInstAcum = (rd.capacidad_instalada_acum != null) ? Number(rd.capacidad_instalada_acum) : null;
+        const rdCapUtilAcum = (rd.capacidad_utilizada_acum != null) ? Number(rd.capacidad_utilizada_acum) : null;
+        let pctCapAcum = (rd.pct_capacidad_utilizada_acum != null) ? Number(rd.pct_capacidad_utilizada_acum) : null;
+        if (pctCapAcum == null && rdCapInstAcum && rdCapUtilAcum != null && rdCapInstAcum > 0){
+          pctCapAcum = rdCapUtilAcum / rdCapInstAcum;
+        }
+        $("rdCapUtil").textContent = fmt.pct1(pctCapAcum);
 
         $("rdSur").textContent   = fmt.int(surDia);
         $("rdSurPct").textContent= fmt.pct1(pctSurDia);
@@ -382,23 +441,19 @@
         const pm = res.promedio_diario_mtd || {};
         $("pmPed").textContent  = fmt.dec(pm.pedidos);
         $("pmPart").textContent = fmt.dec(pm.partidas);
-        const capInstMTD = (capDia && res.dias_transcurridos) ? (capDia * res.dias_transcurridos) : null;
-        const capUtilMTD = (capInstMTD ? (res.partidas_mtd || 0) / capInstMTD : null);
-        $("pmCapInst").textContent = fmt.int(capInstMTD);
-        $("pmCapUtil").textContent = fmt.pct1(capUtilMTD);
+        $("pmCapInst").textContent = fmt.int(res.capacidad_instalada);
+        $("pmCapUtil").textContent = fmt.pct1(res.pct_capacidad_utilizada);
         $("pmSur").textContent  = fmt.dec(pm.surtidos);
         $("pmVer").textContent  = fmt.dec(pm.verificados);
         $("pmEmb").textContent  = fmt.dec(pm.embarcados);
 
-        const th = (set && set.thresholds) ? set.thresholds : {rojo:0.8, amarillo:0.9};
         const bono = res.bono_en_equipo || {};
         const conteo = bono.conteo || {verde:0, ambar:0, rojo:0};
-        $("bonoDiasTrans").textContent = (bono.dias_transcurridos ?? res.dias_transcurridos ?? 0);
-        $("bono90").textContent = conteo.verde ?? 0;
-        $("bono80").textContent = conteo.ambar ?? 0;
-        $("bono79").textContent = conteo.rojo ?? 0;
+        $("bonoDiasTrans").textContent = fmt.int(bono.dias_transcurridos ?? res.dias_transcurridos ?? 0);
+        $("bono90").textContent = fmt.int(conteo.verde ?? 0);
+        $("bono80").textContent = fmt.int(conteo.ambar ?? 0);
+        $("bono79").textContent = fmt.int(conteo.rojo ?? 0);
 
-        // ===== Bono mensual: prioriza backend (puntos + %) y filtra filas futuras =====
         (function applyBono(){
           const pickNum = (...vals) => {
             for (const v of vals){
@@ -408,23 +463,25 @@
             }
             return null;
           };
+
           let pEmbMTD = pickNum(
             res?.bono_mensual?.porcentaje_embarque_mtd,
             res?.bono_header?.porcentaje_embarque_mtd,
             res?.pct_embarque
           );
+
           if (pEmbMTD == null) {
             const pedMTD = Number(res.pedidos_mtd || 0);
             const embMTD = Number(res.embarcados_mtd || 0);
             pEmbMTD = pedMTD ? (embMTD / pedMTD) : null;
           }
 
-          let puntos = pickNum(res?.bono_mensual?.puntos);
-          if (puntos == null && pEmbMTD != null){
-            if      (pEmbMTD >= 1.0)    puntos = 6;
-            else if (pEmbMTD >= 0.8999) puntos = 5;
-            else if (pEmbMTD >= 0.80)   puntos = 3;
-            else                        puntos = 0;
+          let dias = pickNum(res?.bono_mensual?.puntos);
+          if (dias == null && pEmbMTD != null){
+            if      (pEmbMTD >= 1.0)    dias = 6;
+            else if (pEmbMTD >= 0.8999) dias = 5;
+            else if (pEmbMTD >= 0.80)   dias = 3;
+            else                        dias = 0;
           }
 
           const pctText = (pEmbMTD==null? "—" : (pEmbMTD*100).toFixed(1)+"%");
@@ -437,16 +494,16 @@
           if (pointsEl){
             pointsEl.className = "text-3xl font-extrabold inline-flex items-center px-3 py-1 rounded-lg ring-1";
             let color = "text-gray-700 bg-gray-50 ring-gray-200";
-            if (puntos === 6)      color = "text-green-700 bg-green-50 ring-green-200";
-            else if (puntos === 5) color = "text-blue-700 bg-blue-50 ring-blue-200";
-            else if (puntos === 3) color = "text-amber-700 bg-amber-50 ring-amber-200";
-            else if (puntos === 0) color = "text-red-700 bg-red-50 ring-red-200";
+            if (dias === 6)      color = "text-green-700 bg-green-50 ring-green-200";
+            else if (dias === 5) color = "text-blue-700 bg-blue-50 ring-blue-200";
+            else if (dias === 3) color = "text-amber-700 bg-amber-50 ring-amber-200";
+            else if (dias === 0) color = "text-red-700 bg-red-50 ring-red-200";
             pointsEl.className += " " + color;
-            pointsEl.textContent = (puntos==null? "—" : `${puntos} pts`);
+            pointsEl.textContent = (dias==null? "—" : `${dias} días`);
           }
         })();
 
-        // TAB 3: resumen & semáforos
+        // TAB 3
         $("resDiaFecha").textContent    = $("rdDia").textContent;
         $("resDiaPedidos").textContent  = fmt.int(pedDia);
         $("resDiaPendPrev").textContent = fmt.int(pendPrev);
@@ -466,7 +523,23 @@
         pillV.textContent = fmt.pct1(pctVerDia);
         pillE.textContent = fmt.pct1(pctEmbDia);
 
-        // Gráfica (filtrada)
+        // ✅ NUEVO: ATR (del backend)
+        const atr = (rowHoy && rowHoy.atrasos) ? rowHoy.atrasos : {};
+        const atrSurIni = Number(atr.surtido_inicio ?? 0);
+        const atrVerIni = Number(atr.verificacion_inicio ?? 0);
+        const atrEmbIni = Number(atr.embarque_inicio ?? 0);
+        const atrSurHoy = Number(atr.surtido_resuelto_hoy ?? 0);
+        const atrVerHoy = Number(atr.verificacion_resuelto_hoy ?? 0);
+        const atrEmbHoy = Number(atr.embarque_resuelto_hoy ?? 0);
+
+        $("atrSurIni").textContent = fmt.int(atrSurIni);
+        $("atrVerIni").textContent = fmt.int(atrVerIni);
+        $("atrEmbIni").textContent = fmt.int(atrEmbIni);
+        $("atrSurHoy").textContent = fmt.int(atrSurHoy);
+        $("atrVerHoy").textContent = fmt.int(atrVerHoy);
+        $("atrEmbHoy").textContent = fmt.int(atrEmbHoy);
+
+        // Gráfica
         const labels = rowsF.map(r => r.dia);
         const pedidos = rowsF.map(r => r.pedidos || 0);
         const surtidos = rowsF.map(r => r.surtidos || 0);

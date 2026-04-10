@@ -4,3 +4,5 @@ SQLAlchemy==2.0.34
 PyMySQL==1.1.1
 python-dateutil==2.9.0.post0
 requests
+pandas==2.2.2
+openpyxl==3.1.5

@@ -19,6 +19,8 @@ services:
       # Si tu backend aún usa DB para otras cosas, puedes dejar DB_URI presente.
       - DB_URI=${DB_URI}
     volumes:
+      # Monta el código del backend en el contenedor (DEV): así ve cambios sin rebuild
+      - ./backend:/app
       # Persistimos un directorio de cache en host para reutilizar entre reinicios
       - ./data/cache:/app/.cache/dashjson
     ports:

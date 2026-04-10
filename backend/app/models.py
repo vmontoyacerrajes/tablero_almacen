@@ -33,3 +33,11 @@ class DashboardSettings(Base):
     unit = Column(Enum('pedidos','partidas'), default='pedidos')
     holidays = Column(JSON)
     thresholds = Column(JSON)
+
+class CalendarioInhabil(Base):
+    __tablename__ = "calendario_inhabil"
+    fecha = Column(Date, primary_key=True)
+    es_oficial = Column(Integer)  # tinyint(1)
+    descripcion = Column(String)
+    fuente = Column(String)
+    activo = Column(Integer)      # tinyint(1)

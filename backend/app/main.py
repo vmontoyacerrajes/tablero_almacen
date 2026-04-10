@@ -4,14 +4,16 @@ from sqlalchemy.orm import Session
 import os, datetime as dt
 import logging
 import json as pyjson
-
-from app.db import get_db
 from app.services.tablero import (
     tablero_diario,
     tablero_resultados,
     get_settings,
-    debug_json_probe,   # <- para /api/debug-json
+    debug_json_probe,
+    debug_event_coverage,  # <-- agrega
 )
+
+from app.db import get_db
+
 
 app = FastAPI(title="Tablero Operaciones")
 
@@ -29,12 +31,22 @@ app.add_middleware(
 )
 
 def _parse_month_str(s: str) -> dt.date:
-    """Convierte 'YYYY-MM' a date (día = 1). Lanza ValueError si es inválido."""
-    try:
-        y, m = map(int, s.split("-"))
-        return dt.date(y, m, 1)
-    except Exception:
-        raise ValueError(f"Parámetro 'month' inválido, esperaba 'YYYY-MM', recibí: {s!r}")
+    """
+    Convierte 'YYYY-MM' o 'YYYY-MM-DD' a date (día = 1).
+    Lanza ValueError si es inválido.
+    """
+    s = (s or "").strip()
+    if not s:
+        raise ValueError("Parámetro 'month' inválido: vacío. Esperaba 'YYYY-MM' o 'YYYY-MM-DD'.")
+
+    for fmt in ("%Y-%m", "%Y-%m-%d"):
+        try:
+            d = dt.datetime.strptime(s, fmt).date()
+            return d.replace(day=1)
+        except ValueError:
+            pass
+
+    raise ValueError(f"Parámetro 'month' inválido, esperaba 'YYYY-MM' o 'YYYY-MM-DD', recibí: {s!r}")
 
 def _settings_to_dict(s) -> dict:
     """Serializa DashboardSettings sin campos internos de SQLAlchemy."""
@@ -144,3 +156,14 @@ def api_debug_json(month: str):
     except Exception as e:
         logger.exception("Fallo en /api/debug-json")
         raise HTTPException(status_code=502, detail=f"/api/debug-json fallo: {e}")
+    
+@app.get("/api/debug-events")
+def api_debug_events(month: str):
+    try:
+        first = _parse_month_str(month)
+        return debug_event_coverage(first)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Fallo en /api/debug-events")
+        raise HTTPException(status_code=502, detail=f"/api/debug-events fallo: {e}")
