@@ -1,0 +1,56 @@
+name: Build & Deploy to Azure (ACR + Web App)
+
+on:
+  push:
+    branches:
+      - feature/tablero-almacen-v1_4   # cámbialo a main cuando lo migres a main
+  workflow_dispatch:
+
+env:
+  ACR_NAME: TU_ACR_NAME                      # ej: acrtableroalmacen
+  ACR_LOGIN_SERVER: TU_ACR_NAME.azurecr.io   # ej: acrtableroalmacen.azurecr.io
+  IMAGE_NAME: tablero-almacen
+  WEBAPP_NAME: TU_WEBAPP_NAME                # ej: webapp-tablero-almacen
+  RESOURCE_GROUP: TU_RESOURCE_GROUP          # ej: rg-tablero-almacen
+  CONTAINER_PORT: "8000"                     # tu api escucha 8000
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: |
+          az acr login --name $ACR_NAME
+
+      - name: Build and push image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          FULL_IMAGE=$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
+          echo "FULL_IMAGE=$FULL_IMAGE" >> $GITHUB_ENV
+
+          docker build -t $FULL_IMAGE -f backend/Dockerfile backend
+          docker push $FULL_IMAGE
+
+      - name: Deploy to Web App (container)
+        run: |
+          az webapp config container set \
+            --name $WEBAPP_NAME \
+            --resource-group $RESOURCE_GROUP \
+            --docker-custom-image-name $FULL_IMAGE \
+            --docker-registry-server-url https://$ACR_LOGIN_SERVER
+
+      - name: Set app settings (PORT)
+        run: |
+          az webapp config appsettings set \
+            --name $WEBAPP_NAME \
+            --resource-group $RESOURCE_GROUP \
+            --settings WEBSITES_PORT=$CONTAINER_PORT
