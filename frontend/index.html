@@ -81,7 +81,7 @@
         </div>
         <div class="divider"></div>
 
-        <!-- ✅ Pendientes + total para “avance real” -->
+        <!-- Pendientes + total para “avance real” -->
         <div class="grid grid-cols-3 gap-3">
           <div>
             <div class="k">Pedidos</div>
@@ -257,9 +257,11 @@
           <thead>
             <tr class="text-xs uppercase text-gray-600">
               <th class="text-left">Día</th>
-              <th class="text-right" title="Pedidos cuya BASE cae en el día (día programado)"># Pedidos</th>
-              <th class="text-right" title="Pendientes previos al inicio del día (BASE < día y NO embarcados antes de ese día)">PEND. PREV</th>
-              <th class="text-right" title="Total a surtir neto = pedidos del día + pendientes previos">TOTAL</th>
+
+              <th class="text-right"># Pedidos</th>
+              <th class="text-right">PEND PREV</th>
+              <th class="text-right">TOTAL</th>
+
               <th class="text-right"># Partidas</th>
 
               <th class="text-right"># Surtidos</th>
@@ -271,10 +273,10 @@
               <th class="text-right"># Emb</th>
               <th class="text-right">% Emb</th>
 
-              <!-- NUEVO: Atrasos resueltos hoy -->
-              <th class="text-right" title="Atrasos RESUELTOS HOY (base < día): pedidos atrasados que se surtieron hoy.">ATR SUR</th>
-              <th class="text-right" title="Atrasos RESUELTOS HOY (base < día): pedidos atrasados que se verificaron hoy.">ATR VER</th>
-              <th class="text-right" title="Atrasos RESUELTOS HOY (base < día): pedidos atrasados que se embarcaron hoy.">ATR EMB</th>
+              <!-- NUEVO: Atrasos resueltos hoy (lo que “bajaste” del atraso) -->
+              <th class="text-right" title="Atrasos resueltos HOY en Surtido (base < día). Hover sobre valores para ver Inicio vs Resuelto.">ATR SUR</th>
+              <th class="text-right" title="Atrasos resueltos HOY en Verificación (base < día). Hover sobre valores para ver Inicio vs Resuelto.">ATR VER</th>
+              <th class="text-right" title="Atrasos resueltos HOY en Embarque (base < día). Hover sobre valores para ver Inicio vs Resuelto.">ATR EMB</th>
             </tr>
           </thead>
           <tbody id="tbody" class="divide-y divide-gray-100"></tbody>
@@ -337,11 +339,16 @@
     }
 
     function toCSV(rows) {
+      // Incluye ATR inicio y resuelto para comparar y auditar
       const cols = [
-        "dia","pedidos","pend_surtido_prev_neto","total_a_surtir_neto","partidas",
-        "surtidos","pct_surtido","verificados","pct_verificacion","embarcados","pct_embarque",
-        "atrasos.surtido_inicio","atrasos.verificacion_inicio","atrasos.embarque_inicio",
-        "atrasos.surtido_resuelto_hoy","atrasos.verificacion_resuelto_hoy","atrasos.embarque_resuelto_hoy"
+        "dia",
+        "pedidos","pend_surtido_prev_neto","total_a_surtir_neto","partidas",
+        "surtidos","pct_surtido",
+        "verificados","pct_verificacion",
+        "embarcados","pct_embarque",
+        "atrasos.surtido_inicio","atrasos.surtido_resuelto_hoy",
+        "atrasos.verificacion_inicio","atrasos.verificacion_resuelto_hoy",
+        "atrasos.embarque_inicio","atrasos.embarque_resuelto_hoy"
       ];
       const head = cols.join(",");
       const get = (r, c) => {
@@ -408,14 +415,13 @@
         document.getElementById("rdDia").textContent  = rd.dia
           ? new Date(rd.dia + "T00:00:00").toLocaleDateString('es-MX', { weekday:'long', year:'numeric', month:'short', day:'2-digit'})
           : "—";
-
         document.getElementById("rdPed").textContent  = fmt.int(pedDia);
         document.getElementById("rdPendPrev").textContent = fmt.int(pendPrev);
         document.getElementById("rdTotal").textContent = fmt.int(totalDia);
 
         document.getElementById("rdPart").textContent = fmt.int(partDia);
 
-        // ✅ Capacidad acumulada al corte (backend)
+        // Capacidad real acumulada (backend)
         document.getElementById("rdCapInst").textContent = fmt.int(pickNum(rd.capacidad_instalada_acum));
         document.getElementById("rdCapUtil").textContent = fmt.pct1(pickNum(rd.pct_capacidad_utilizada_acum));
 
@@ -428,7 +434,7 @@
         document.getElementById("rdEmb").textContent  = fmt.int(embDia);
         document.getElementById("rdEmbPct").textContent  = fmt.pct1(pctEmbDia);
 
-        // ====== Acumulado MTD (usar backend, sin recomputar) ======
+        // ====== Acumulado MTD (usar backend) ======
         document.getElementById("pmInfo").textContent =
           (res.dias_transcurridos != null) ? `Con ${res.dias_transcurridos} días hábiles (hasta ${limitDay || '—'})` : "—";
 
@@ -512,14 +518,22 @@
           const pend = Number(r.pend_surtido_prev_neto ?? 0);
           const tot  = Number(r.total_a_surtir_neto ?? ((r.pedidos||0) + pend));
 
-          const atr = r.atrasos || {};
-          const atrSur = Number(atr.surtido_resuelto_hoy || 0);
-          const atrVer = Number(atr.verificacion_resuelto_hoy || 0);
-          const atrEmb = Number(atr.embarque_resuelto_hoy || 0);
+          const a = r.atrasos || {};
+          // Mostrar RESUELTO HOY (lo solicitado)
+          const atrSur = (a.surtido_resuelto_hoy != null) ? Number(a.surtido_resuelto_hoy) : null;
+          const atrVer = (a.verificacion_resuelto_hoy != null) ? Number(a.verificacion_resuelto_hoy) : null;
+          const atrEmb = (a.embarque_resuelto_hoy != null) ? Number(a.embarque_resuelto_hoy) : null;
 
-          const tipSur = "Atrasos RESUELTOS hoy (base < día): pedidos atrasados surtidos hoy";
-          const tipVer = "Atrasos RESUELTOS hoy (base < día): pedidos atrasados verificados hoy";
-          const tipEmb = "Atrasos RESUELTOS hoy (base < día): pedidos atrasados embarcados hoy";
+          // Tooltip: Inicio vs Resuelto hoy
+          const tipSur = (a.surtido_inicio!=null || a.surtido_resuelto_hoy!=null)
+            ? `Atraso inicio: ${a.surtido_inicio ?? 0} · Resuelto hoy: ${a.surtido_resuelto_hoy ?? 0}`
+            : "";
+          const tipVer = (a.verificacion_inicio!=null || a.verificacion_resuelto_hoy!=null)
+            ? `Atraso inicio: ${a.verificacion_inicio ?? 0} · Resuelto hoy: ${a.verificacion_resuelto_hoy ?? 0}`
+            : "";
+          const tipEmb = (a.embarque_inicio!=null || a.embarque_resuelto_hoy!=null)
+            ? `Atraso inicio: ${a.embarque_inicio ?? 0} · Resuelto hoy: ${a.embarque_resuelto_hoy ?? 0}`
+            : "";
 
           const tr = document.createElement("tr");
           tr.className = "hover:bg-slate-50";
@@ -541,9 +555,9 @@
             <td class="text-right">${fmt.int(r.embarcados)}</td>
             <td class="text-right"><span class="pill ${pillClass(pE, th)}">${fmt.pct(pE)}</span></td>
 
-            <td class="text-right" title="${tipSur}">${fmt.int(atrSur)}</td>
-            <td class="text-right" title="${tipVer}">${fmt.int(atrVer)}</td>
-            <td class="text-right" title="${tipEmb}">${fmt.int(atrEmb)}</td>
+            <td class="text-right" title="${tipSur}">${atrSur==null ? "—" : fmt.int(atrSur)}</td>
+            <td class="text-right" title="${tipVer}">${atrVer==null ? "—" : fmt.int(atrVer)}</td>
+            <td class="text-right" title="${tipEmb}">${atrEmb==null ? "—" : fmt.int(atrEmb)}</td>
           `;
           tbody.appendChild(tr);
         });
